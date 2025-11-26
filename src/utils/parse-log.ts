@@ -22,27 +22,37 @@ const WARN_PATTERNS = [/\bwarn(ing)?\b/i, /\bWARN[!_]/, /\bdeprecated\b/i]
 
 const DEBUG_PATTERNS = [/\bdebug\b/i, /\bDEBUG[_:]/, /\btrace\b/i, /\bverbose\b/i]
 
+// ANSI escape code regex - matches all ANSI sequences
+// eslint-disable-next-line no-control-regex
+const ANSI_REGEX = /\x1b\[[0-9;]*[a-zA-Z]|\x1b\].*?\x07|\x1b[PX^_].*?\x1b\\|\x1b.|\x07/g
+
+/**
+ * Strips ANSI escape codes from a string
+ */
+export function stripAnsi(str: string): string {
+  return str.replace(ANSI_REGEX, "")
+}
+
 /**
  * Detects the log level from a log message
  */
 export function detectLogLevel(message: string): LogLevel {
-  // Check for error patterns
+  const clean = stripAnsi(message)
+
   for (const pattern of ERROR_PATTERNS) {
-    if (pattern.test(message)) {
+    if (pattern.test(clean)) {
       return "error"
     }
   }
 
-  // Check for warning patterns
   for (const pattern of WARN_PATTERNS) {
-    if (pattern.test(message)) {
+    if (pattern.test(clean)) {
       return "warn"
     }
   }
 
-  // Check for debug patterns
   for (const pattern of DEBUG_PATTERNS) {
-    if (pattern.test(message)) {
+    if (pattern.test(clean)) {
       return "debug"
     }
   }
@@ -51,57 +61,21 @@ export function detectLogLevel(message: string): LogLevel {
 }
 
 /**
- * Attempts to format JSON in a log message
- */
-export function formatJson(message: string): string {
-  // Try to find and format JSON objects in the message
-  try {
-    // Check if the entire message is JSON
-    if (message.trim().startsWith("{") || message.trim().startsWith("[")) {
-      const parsed = JSON.parse(message.trim())
-      return JSON.stringify(parsed, null, 2)
-    }
-  } catch {
-    // Not valid JSON, return as-is
-  }
-
-  // Try to find JSON embedded in the message
-  const jsonMatch = message.match(/(\{[\s\S]*\}|\[[\s\S]*\])/)
-  if (jsonMatch) {
-    try {
-      const parsed = JSON.parse(jsonMatch[1]!)
-      const formatted = JSON.stringify(parsed, null, 2)
-      return message.replace(jsonMatch[1]!, formatted)
-    } catch {
-      // Invalid JSON, return as-is
-    }
-  }
-
-  return message
-}
-
-/**
  * Parses a log line to extract level and clean message
  */
 export function parseLogLine(line: string): ParsedLog {
-  const level = detectLogLevel(line)
-  const message = line
+  // Strip ANSI codes for cleaner display
+  const clean = stripAnsi(line).trim()
+  const level = detectLogLevel(clean)
 
-  return { level, message }
-}
-
-/**
- * Strips ANSI escape codes from a string
- */
-export function stripAnsi(str: string): string {
-  // eslint-disable-next-line no-control-regex
-  return str.replace(/\x1b\[[0-9;]*m/g, "")
+  return { level, message: clean }
 }
 
 /**
  * Truncates a string to a maximum length
  */
 export function truncate(str: string, maxLength: number): string {
+  if (maxLength <= 3) return str.slice(0, maxLength)
   if (str.length <= maxLength) return str
   return str.slice(0, maxLength - 3) + "..."
 }

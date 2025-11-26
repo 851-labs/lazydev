@@ -9,6 +9,7 @@ interface ConsolePanelProps {
   isActive: boolean
   height: number
   width: number
+  title?: string
   isInteractive?: boolean
 }
 
@@ -52,6 +53,7 @@ export function ConsolePanel({
   isActive,
   height,
   width,
+  title = "Console",
   isInteractive = true,
 }: ConsolePanelProps) {
   useInput(
@@ -88,15 +90,15 @@ export function ConsolePanel({
   const visibleLogs = logs.slice(startIndex, endIndex)
 
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor={borderColor} height={height}>
+    <Box flexDirection="column" borderStyle="round" borderColor={borderColor} height={height} width={width}>
       {/* Header */}
       <Box paddingX={1}>
         <Text color={isActive ? "cyan" : "white"} bold>
-          [1]
+          [2]
         </Text>
         <Text color={borderColor}>─</Text>
         <Text color={isActive ? "cyan" : "white"} bold>
-          All
+          {title}
         </Text>
         <Text color="gray"> ({logs.length})</Text>
         {counts.error ? (

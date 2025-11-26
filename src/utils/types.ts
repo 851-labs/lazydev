@@ -7,6 +7,7 @@ export interface LogEntry {
   message: string
   source: "stdout" | "stderr"
   raw: string
+  processName: string
 }
 
 export interface ProcessState {
@@ -14,3 +15,12 @@ export interface ProcessState {
   pid?: number
   exitCode?: number | null
 }
+
+export interface Process {
+  name: string
+  command: string
+  state: ProcessState
+  logs: LogEntry[]
+}
+
+export type Panel = "processes" | "console"
