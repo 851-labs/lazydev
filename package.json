@@ -1,6 +1,6 @@
 {
   "name": "@851-labs/lazydev",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "lazygit-style log viewer for any command",
   "type": "module",
   "publishConfig": {
