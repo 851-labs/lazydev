@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "lazygit-style log viewer for any command",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "lazydev": "./src/cli.tsx"
   },
