@@ -5,6 +5,18 @@ import type { ProcessConfig } from "../utils/parse-procfile.ts"
 import { parseLogLine } from "../utils/parse-log.ts"
 import { registerCleanup } from "../cli.tsx"
 
+/**
+ * Kill a process and all its descendants by sending a signal to the process group.
+ * On Unix, using a negative PID sends the signal to the entire process group.
+ */
+function killProcessGroup(pid: number, signal: NodeJS.Signals = "SIGTERM"): void {
+  try {
+    process.kill(-pid, signal)
+  } catch {
+    // Process or process group may have already exited
+  }
+}
+
 interface UseProcessesOptions {
   configs: ProcessConfig[]
 }
@@ -156,13 +168,13 @@ export function useProcesses({ configs }: UseProcessesOptions): UseProcessesResu
   const kill = useCallback((name: string) => {
     const proc = subprocessesRef.current.get(name)
     if (proc) {
-      proc.kill("SIGTERM")
+      killProcessGroup(proc.pid)
     }
   }, [])
 
   const killAll = useCallback(() => {
     for (const proc of subprocessesRef.current.values()) {
-      proc.kill("SIGTERM")
+      killProcessGroup(proc.pid)
     }
   }, [])
 
@@ -193,14 +205,14 @@ export function useProcesses({ configs }: UseProcessesOptions): UseProcessesResu
     // Register global cleanup for Ctrl+C
     registerCleanup(() => {
       for (const proc of subprocessesRef.current.values()) {
-        proc.kill("SIGTERM")
+        killProcessGroup(proc.pid)
       }
     })
 
     // Cleanup on unmount only
     return () => {
       for (const proc of subprocessesRef.current.values()) {
-        proc.kill("SIGTERM")
+        killProcessGroup(proc.pid)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
